@@ -34,3 +34,6 @@ python3 clear_ml/pipeline.py
 #### 6. Настройка обновления своей модели на инференсе и создание inference-server
 
 #### 7. Настройка триггеров и мониторинга моделей
+```
+python3 clear_ml/trigger.py 
+```
