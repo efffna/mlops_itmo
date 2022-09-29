@@ -15,13 +15,13 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from src.dataset import BuildDataset
-from src.utils import augmentations, criterion, dice_coef, iou_coef
+from src.utils import get_augmentations, criterion, dice_coef, iou_coef
 
 c_ = Fore.GREEN
 sr_ = Style.RESET_ALL
 
 
-class Train:
+class Trainer:
     def __init__(self, config):
         self.dataset_path = config.dataset_path
         self.dir_csv = f"{self.dataset_path}/data.csv"
@@ -34,7 +34,7 @@ class Train:
         self.n_accumulate = max(1, 32 // self.batch_size)
 
     def prepare_loaders(self):
-        data_transforms = augmentations(self.size_image)
+        data_transforms = get_augmentations(self.size_image)
         train_dataset, valid_dataset = train_test_split(
             self.data_df, test_size=0.1, random_state=43
         )
@@ -61,7 +61,6 @@ class Train:
     def train_one_epoch(self, model, optimizer, scheduler, device, epoch, train_loader):
         model.train()
         scaler = amp.GradScaler()
-        dataset_size = 0
         running_loss = 0.0
 
         pbar = tqdm(enumerate(train_loader), total=len(train_loader), desc="Train")
@@ -86,8 +85,7 @@ class Train:
                     scheduler.step()
 
             running_loss += loss.item() * batch_size
-            dataset_size += batch_size
-            epoch_loss = running_loss / dataset_size
+            epoch_loss = running_loss / batch_size
             mem = torch.cuda.memory_reserved() / 1e9 if torch.cuda.is_available() else 0
             current_lr = optimizer.param_groups[0]["lr"]
             pbar.set_postfix(
@@ -99,7 +97,6 @@ class Train:
 
     def valid_one_epoch(self, model, device, epoch, valid_loader):
         model.eval()
-        dataset_size = 0
         running_loss = 0.0
         val_scores = []
         pbar = tqdm(enumerate(valid_loader), total=len(valid_loader), desc="Valid ")
@@ -111,8 +108,7 @@ class Train:
             y_pred = model(images)
             loss = criterion(y_pred, masks)
             running_loss += loss.item() * batch_size
-            dataset_size += batch_size
-            epoch_loss = running_loss / dataset_size
+            epoch_loss = running_loss / batch_size
 
             y_pred = nn.Sigmoid()(y_pred)
             val_dice = dice_coef(masks, y_pred).cpu().detach().numpy()
@@ -135,7 +131,6 @@ class Train:
         start = time.time()
         best_model_wts = copy.deepcopy(model.state_dict())
         best_dice = -np.inf
-        best_epoch = -1
         history = defaultdict(list)
 
         for epoch in range(1, num_epochs + 1):
@@ -164,10 +159,7 @@ class Train:
                 print(f"{c_}Valid Score Improved ({best_dice:0.4f} ---> {val_dice:0.4f})")
                 best_dice = val_dice
                 best_jaccard = val_jaccard
-                best_epoch = epoch
-
                 best_model_wts = copy.deepcopy(model.state_dict())
-
                 torch.save(model.state_dict(), f"{self.save_models}/best.pt")
 
             last_model_wts = copy.deepcopy(model.state_dict())

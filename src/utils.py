@@ -23,7 +23,7 @@ def build_model(backbone, num_classes, in_channels, device):
     return model
 
 
-def augmentations(image_size):
+def get_augmentations(image_size):
     data_transforms = {
         "train": A.Compose(
             [
@@ -86,8 +86,5 @@ def fetch_scheduler(optimizer, scheduler, batch_size, epochs, min_lr=1e-6, T_0=2
         )
     elif scheduler == "ExponentialLR":
         scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=0.85)
-
-    elif scheduler == None:
-        return None
 
     return scheduler

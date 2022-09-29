@@ -15,13 +15,12 @@ import tritonclient.grpc as grpcclient
 class InferenceModel:
     def __init__(self, url):
         self.client = grpcclient.InferenceServerClient(url=url, verbose=True)
-        self._load_model(self.model_onnx_path)
         self.model_onnx_path = "models/effb2.onnx"
+        self.test_path = sorted(list(("data/test/*")))
         self.size_image = 224
-        root = Path(f"/")
-        self.test_path = sorted(list(root.glob("test/*")))
         self.df = pd.DataFrame()
-        self.df["test_path"] = self.test_path
+        self.df["test_path"] = self.test_pat
+        self._load_model(self.model_onnx_path)
 
     def _preprocess_data(self, path):
         input_img = cv2.imread(path, cv2.IMREAD_UNCHANGED)

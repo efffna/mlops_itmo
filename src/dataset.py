@@ -14,6 +14,22 @@ class BuildDataset(Dataset):
     def __len__(self):
         return len(self.df)
 
+    def changing_mask_channels(mask):
+        # other tracks
+        mask[:, :, 0][mask[:, :, 0] == 6] = 1  
+        mask[:, :, 1][mask[:, :, 1] == 6] = 0
+        mask[:, :, 2][mask[:, :, 2] == 6] = 0
+        # main track
+        mask[:, :, 0][mask[:, :, 0] == 7] = 0  
+        mask[:, :, 1][mask[:, :, 1] == 7] = 1
+        mask[:, :, 2][mask[:, :, 2] == 7] = 0
+        # wagons
+        mask[:, :, 0][mask[:, :, 0] == 10] = 0  
+        mask[:, :, 1][mask[:, :, 1] == 10] = 0
+        mask[:, :, 2][mask[:, :, 2] == 10] = 1
+
+        return mask
+
     def __getitem__(self, idx):
         image_path = self.image_path[idx]
         mask_path = self.mask_path[idx]
@@ -23,16 +39,7 @@ class BuildDataset(Dataset):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = img.astype("float32")
         img /= 255.0
-
-        mask[:, :, 0][mask[:, :, 0] == 6] = 1
-        mask[:, :, 0][mask[:, :, 0] == 7] = 0
-        mask[:, :, 0][mask[:, :, 0] == 10] = 0
-        mask[:, :, 1][mask[:, :, 1] == 7] = 1
-        mask[:, :, 1][mask[:, :, 1] == 6] = 0
-        mask[:, :, 1][mask[:, :, 1] == 10] = 0
-        mask[:, :, 2][mask[:, :, 2] == 10] = 1
-        mask[:, :, 2][mask[:, :, 2] == 7] = 0
-        mask[:, :, 2][mask[:, :, 2] == 6] = 0
+        mask = self.changing_mask_channels(mask)
 
         transformed = self.transfroms(image=img, mask=mask)
         transformed_image = transformed["image"]
