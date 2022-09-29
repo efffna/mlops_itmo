@@ -1,0 +1,25 @@
+# data processing
+dataset_path: "data"
+save_models: "models"
+dataset_name_default: "data"
+output_dataset_path: "dataset"
+model_onnx_path: "models/effb2.onnx"
+task_name_train: train
+task_name_preparation: preparation
+project: itmo_homework
+version: 0.0.0.1
+dataset_id: fb07f3de2f9746edbd64c9cec9963d54
+task_name: Trainer
+
+# train models
+batch_size: 8
+workers: 0
+device: cpu
+epochs: 1
+lr: 0.0002
+size_image: [224, 224]
+backbone: efficientnet-b2
+num_classes: 3
+in_channels: 3
+weight_decay: 0.000001
+scheduler: CosineAnnealingLR
