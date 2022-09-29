@@ -16,7 +16,8 @@ class InferenceModel:
     def __init__(self, url):
         self.client = grpcclient.InferenceServerClient(url=url, verbose=True)
         self.model_onnx_path = "models/effb2.onnx"
-        self.test_path = sorted(list(("data/test/*")))
+        root = Path("./")
+        self.test_path = sorted(list(root.glob("test/*")))
         self.size_image = 224
         self.df = pd.DataFrame()
         self.df["test_path"] = self.test_pat
